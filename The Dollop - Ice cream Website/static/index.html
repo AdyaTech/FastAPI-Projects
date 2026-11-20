@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dollop: small-batch gelato with a Flavor Lab</title>
+  <meta name="description" content="Tell Dollop your mood and the Flavor Lab builds you a cup from today's gelato and sorbet.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='28' r='22' fill='%23ef6f6c'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <a class="skip" href="#menu">Skip to the menu</a>
+
+  <header class="hero">
+    <div class="top">
+      <a class="brand" href="/">
+        <svg viewBox="0 0 64 60" width="34" height="32" aria-hidden="true"><circle cx="32" cy="28" r="22" fill="#ffd95e"/><g fill="#ffdce5"><circle cx="15" cy="44" r="7"/><circle cx="24" cy="47" r="7"/><circle cx="32" cy="48" r="7"/><circle cx="40" cy="47" r="7"/><circle cx="49" cy="44" r="7"/></g><circle cx="32" cy="28" r="22" fill="#ffd95e"/></svg>
+        Dollop
+      </a>
+      <nav aria-label="Main">
+        <a href="#menu">Flavors</a>
+        <a href="/docs">API docs</a>
+      </nav>
+    </div>
+
+    <div class="hero__grid">
+      <div class="hero__copy">
+        <h1 class="hero__title">Tell us your mood. We’ll scoop the rest.</h1>
+        <p class="hero__lede">Describe your day, your craving or who you’re with. The Flavor Lab builds a cup from what’s in the freezer right now.</p>
+
+        <form class="ask" id="ask">
+          <label class="visually-hidden" for="ask-input">Describe your mood or craving</label>
+          <textarea id="ask-input" rows="3" maxlength="300" placeholder="Rainy evening, want something warm, nothing too sweet…"></textarea>
+          <div class="ask__bar">
+            <span class="ask__count" id="ask-count">0 / 300</span>
+            <button class="btn btn--butter" type="submit">Make my cup</button>
+          </div>
+        </form>
+
+        <div class="chips" id="chips">
+          <button class="chip" type="button">Hot afternoon, nothing too sweet</button>
+          <button class="chip" type="button">Post-exam comfort, under ₹250</button>
+          <button class="chip" type="button">Celebrating with a dairy-free friend</button>
+          <button class="chip" type="button">Nostalgic, like a wedding in winter</button>
+        </div>
+        <p class="hero__engine" id="engine"></p>
+      </div>
+
+      <section class="sheet" id="sheet" aria-live="polite" aria-busy="true" aria-label="Your Flavor Lab cup">
+        <p class="sheet__busy">Setting up today’s cup…</p>
+      </section>
+    </div>
+  </header>
+
+  <div class="shop">
+    <div class="shop__grid">
+      <main class="menu" id="menu">
+        <h2 class="menu__title">Today’s flavors</h2>
+        <p class="menu__sub">Churned in small batches every morning. Prices are per scoop.</p>
+
+        <div class="controls">
+          <div class="tabs" id="tabs" role="group" aria-label="Filter by category"></div>
+          <div class="tools">
+            <label class="visually-hidden" for="search">Search flavors</label>
+            <input id="search" class="search" type="search" placeholder="Search flavors, like mango or rose" autocomplete="off">
+            <label class="toggle"><input type="checkbox" id="vegan"> Dairy free only</label>
+            <label class="toggle"><input type="checkbox" id="hide-sold"> Hide sold out</label>
+          </div>
+        </div>
+
+        <div id="board" aria-live="polite"></div>
+      </main>
+
+      <aside class="cup is-empty" id="cup" aria-label="Your cup">
+        <div class="cup__bar">
+          <span class="cup__dots" id="cup-dots" aria-hidden="true"></span>
+          <p class="cup__summary" id="cup-summary" aria-live="polite"></p>
+          <button class="btn btn--solid" id="cup-toggle" type="button" aria-expanded="false" aria-controls="cup-panel">View cup</button>
+        </div>
+        <div class="cup__panel" id="cup-panel">
+          <h2 class="cup__title">Your cup</h2>
+          <div class="cup__art" id="cup-art"></div>
+          <ul class="lines" id="cup-lines"></ul>
+          <div class="cup__total" id="cup-total-row">
+            <span>Total</span>
+            <strong class="cup__price" id="cup-total">₹0</strong>
+          </div>
+          <p class="cup__note">Show this cup at the counter to pay.</p>
+          <button class="btn btn--ghost" id="cup-clear" type="button">Empty the cup</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <p>Dollop is a demo project. The menu comes from <a href="/menu">/menu</a> and the Flavor Lab from <a href="/docs">/ai/compose</a>.</p>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
