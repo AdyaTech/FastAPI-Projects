@@ -1,6 +1,6 @@
 # 🍨 Dollop
 
-![PRs welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg) ![Good first issues](https://img.shields.io/badge/good%20first%20issues-yes-2536d9.svg) ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+![PRs welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg) ![Good first issues](https://img.shields.io/badge/good%20first%20issues-yes-2536d9.svg) 
 
 A small-batch gelato shop website with an AI **Flavor Lab**. Describe your mood, and it builds you a cup from today's flavors.
 
@@ -90,6 +90,4 @@ Bigger ideas: real checkout, saved favorite cups, streaming the AI reply, a dark
 
 Please follow the [Code of Conduct](CODE_OF_CONDUCT.md). If this project helped you, a ⭐ is much appreciated!
 
-## License
 
-MIT
