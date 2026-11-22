@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netra – leaf diagnosis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1ee; --bg2:#e6ebe7; --panel:#f8f9f7; --ink:#34413f; --muted:#7a8683; --line:#d9dfdb; --soft:#c5cfc9;
+  --accent:#6f8f81; --accent-ink:#f6f8f6;
+  --s-healthy:#8fb09b; --s-mild:#b7c395; --s-moderate:#d9c58f; --s-severe:#d6a98c; --s-critical:#c98f8a;
+  --shadow:0 1px 2px rgba(52,65,63,.05),0 12px 32px -12px rgba(52,65,63,.14);
+  --serif:"Newsreader",Georgia,serif; --sans:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#151b19; --bg2:#1a221f; --panel:#1e2824; --ink:#dde5e0; --muted:#8c9a94; --line:#2b3732; --soft:#3a4943;
+    --accent:#8fb09b; --accent-ink:#17201c;
+    --s-healthy:#7aa088; --s-mild:#a5b47f; --s-moderate:#c9b57c; --s-severe:#c79a7e; --s-critical:#bd817c;
+    --shadow:0 12px 32px -14px rgba(0,0,0,.5)}
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--ink);font:400 1rem/1.65 var(--sans);
+  background:linear-gradient(180deg,var(--bg) 0,var(--bg2) 100%)}
+html{background:var(--bg2)}
+h1,h2,h3,h4,h5,p,ol{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.serif{font-family:var(--serif)}
+
+.top{display:flex;justify-content:space-between;align-items:center;padding:1.4rem clamp(1.2rem,4vw,3.5rem)}
+.brand{display:flex;align-items:center;gap:.65rem;font:300 1.7rem/1 var(--serif);letter-spacing:.01em}
+.brand svg{width:1.7rem;height:1.7rem;color:var(--accent)}
+.brand small{font:400 .88rem var(--sans);color:var(--muted);letter-spacing:.02em;margin-left:.3rem}
+.link{background:none;border:0;cursor:pointer;color:var(--muted);padding:.3rem 0;border-bottom:1px solid transparent}
+.link:hover{color:var(--ink);border-color:var(--soft)}
+
+main{display:grid;grid-template-columns:minmax(300px,400px) 1fr;gap:clamp(2rem,6vw,5.5rem);
+  max-width:1200px;margin:0 auto;padding:1.5rem clamp(1.2rem,4vw,3.5rem) 5rem}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+
+/* lens */
+.capture{position:sticky;top:1.5rem;align-self:start;display:flex;flex-direction:column;align-items:center;gap:1.4rem}
+@media (max-width:860px){.capture{position:static}}
+.lens{width:min(100%,380px);aspect-ratio:1;border-radius:50%;border:0;padding:8%;cursor:pointer;
+  background:radial-gradient(circle,transparent 62%,var(--soft) 62.3%,transparent 63%),
+             radial-gradient(circle,transparent 71%,var(--soft) 71.3%,transparent 72%),
+             radial-gradient(circle,transparent 80%,var(--soft) 80.3%,transparent 81%),
+             radial-gradient(circle,transparent 89%,var(--soft) 89.3%,transparent 90%);
+  transition:transform .4s ease}
+.lens:hover{transform:scale(1.012)}
+.lens[data-drag="1"]{background:radial-gradient(circle,transparent 80%,var(--accent) 80.4%,transparent 82%)}
+.well{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--panel);
+  box-shadow:var(--shadow),inset 0 0 0 1px var(--line);display:grid;place-items:center;text-align:center}
+.well img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.prompt{padding:0 17%;display:grid;gap:.5rem}
+.prompt strong{font:400 1.55rem/1.2 var(--serif)}
+.prompt span{color:var(--muted);font-size:.92rem}
+.well.scanning::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 78%,color-mix(in srgb,var(--accent) 45%,transparent) 100%);
+  animation:sweep 2.2s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.well.scanning::after{animation:none;background:color-mix(in srgb,var(--accent) 22%,transparent)}.lens{transition:none}}
+
+.strip{display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem;min-height:2.9rem}
+.chip{width:2.9rem;height:2.9rem;border-radius:50%;padding:0;overflow:hidden;cursor:pointer;border:2px solid var(--line);background:var(--panel);opacity:.85}
+.chip img{width:100%;height:100%;object-fit:cover;display:block}
+.chip[data-status="scanning"]{border-color:var(--accent)}
+.chip[data-status="done"]{border-color:var(--s-healthy)}
+.chip[data-status="error"]{border-color:var(--s-critical)}
+.chip[aria-pressed="true"]{opacity:1;box-shadow:0 0 0 3px var(--bg),0 0 0 4.5px var(--ink)}
+.actions{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center}
+.btn{border:1px solid var(--soft);background:transparent;border-radius:999px;padding:.6rem 1.5rem;cursor:pointer;font-weight:500;transition:background .2s,border-color .2s}
+.btn:hover{background:var(--panel);border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.status{min-height:1.5rem;text-align:center;color:var(--muted);font-size:.92rem;max-width:34ch}
+.status.err{color:var(--s-critical);filter:brightness(.85)}
+
+/* reading */
+.reading{min-width:0;animation:rise .6s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.reading{animation:none}}
+.intro h2{font:300 clamp(2.4rem,5vw,3.8rem)/1.08 var(--serif);letter-spacing:-.01em;max-width:13ch}
+.intro p{margin-top:1.2rem;max-width:44ch;color:var(--muted)}
+.intro ul{list-style:none;padding:0;margin:2rem 0 0;display:grid;gap:.8rem;max-width:44ch;color:var(--muted)}
+.intro li{padding-left:1.7rem;position:relative}
+.intro li::before{content:"";position:absolute;left:0;top:.6em;width:.7rem;height:.7rem;border-radius:50%;border:1.5px solid var(--accent)}
+
+.crop{font:300 clamp(2.4rem,5vw,3.8rem)/1.05 var(--serif);letter-spacing:-.01em}
+.sub{margin-top:.6rem;color:var(--muted);font-size:.9rem}
+.offline{margin-top:.8rem;display:inline-block;font-size:.82rem;color:var(--muted);background:var(--panel);border-radius:999px;padding:.2rem .9rem;box-shadow:inset 0 0 0 1px var(--line)}
+.health{margin-top:1.2rem;font:400 1.3rem/1.5 var(--serif);max-width:42ch}
+.gauge{margin:2rem 0 .5rem;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-width:30rem}
+.gauge div{height:.5rem;border-radius:999px;background:var(--line)}
+.gauge div[data-on="1"]{background:var(--c)}
+.gauge-labels{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-width:30rem;font-size:.78rem;color:var(--muted)}
+.gauge-labels span[aria-current="true"]{color:var(--ink);font-weight:600}
+.sev-note{margin-top:.9rem;color:var(--muted);max-width:44ch}
+
+section.block{margin-top:3rem}
+section.block>h3{font:400 1.6rem/1.2 var(--serif);margin-bottom:1.2rem}
+.dz{display:grid;gap:1.4rem}
+.dz article{display:grid;grid-template-columns:4.4rem 1fr;gap:1.2rem;align-items:start}
+.ring{width:4.4rem;height:4.4rem;border-radius:50%;display:grid;place-items:center;font-size:.95rem;font-weight:500;position:relative;
+  background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--line) 0)}
+.ring::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--bg)}
+.ring span{position:relative}
+.dz h4{font:500 1.05rem/1.3 var(--sans);margin-bottom:.2rem}
+.dz p{color:var(--muted);max-width:56ch}
+
+.tx{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.2rem}
+@media (max-width:1050px){.tx{grid-template-columns:1fr}}
+.col h4{display:flex;align-items:center;gap:.55rem;font:400 1.15rem var(--serif);margin-bottom:.9rem}
+.col h4::before{content:"";width:.55rem;height:.55rem;border-radius:50%;background:var(--c)}
+.col[data-u="immediate"]{--c:var(--s-critical)}
+.col[data-u="within_week"]{--c:var(--s-moderate)}
+.col[data-u="seasonal"]{--c:var(--s-healthy)}
+.col .none{color:var(--muted);font-size:.9rem}
+.t{background:var(--panel);border-radius:18px;padding:1.1rem 1.2rem;margin-bottom:.9rem;box-shadow:var(--shadow)}
+.t h5{font:500 1rem/1.35 var(--sans);margin:.3rem 0 .5rem}
+.tag{font-size:.74rem;letter-spacing:.04em;color:var(--muted);background:var(--bg);padding:.12rem .7rem;border-radius:999px}
+.t ol{padding-left:1.15rem;display:grid;gap:.35rem;font-size:.93rem;color:var(--muted)}
+.t p{font-size:.93rem;color:var(--muted)}
+.notes{margin-top:2.6rem;padding:1.2rem 1.4rem;background:var(--panel);border-radius:18px;max-width:60ch;color:var(--muted)}
+.caution{margin-top:1.5rem;color:var(--muted);font-size:.85rem;max-width:60ch}
+.tools{margin-top:1.6rem;display:flex;gap:.7rem;flex-wrap:wrap}
+
+/* log */
+.log{grid-column:1/-1;padding-top:2rem;border-top:1px solid var(--line)}
+.log header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.2rem}
+.log h3{font:400 1.6rem var(--serif)}
+.entries{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1.2rem}
+.entry{background:none;border:0;cursor:pointer;text-align:left;display:grid;gap:.35rem;justify-items:start;padding:.2rem}
+.entry .th{width:4.2rem;height:4.2rem;border-radius:50%;overflow:hidden;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--c,var(--line));transition:transform .3s}
+.entry:hover .th{transform:scale(1.06)}
+.entry img{width:100%;height:100%;object-fit:cover;display:block}
+.entry b{font:400 1.05rem/1.2 var(--serif)}
+.entry small{color:var(--muted);font-size:.8rem}
+.empty-log{color:var(--muted);grid-column:1/-1}
+
+@media print{
+  body{background:#fff;color:#000}
+  .top,.capture,.tools,.log,.intro{display:none!important}
+  main{display:block;padding:0}.t{break-inside:avoid;box-shadow:none;border:1px solid #ccc}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 20C9 10 14 6 20 6s11 4 17 14c-6 10-11 14-17 14S9 30 3 20Z"/><circle cx="20" cy="20" r="6.5"/><path d="M20 23.5c0-2.6 1.2-4.3 3.5-5.2-.1 2.7-1.4 4.5-3.5 5.2Z" fill="currentColor" stroke="none"/></svg>
+    Netra <small>leaf diagnosis</small>
+  </div>
+  <button class="link" id="jumpLog" type="button">Field log</button>
+</header>
+
+<main>
+  <div class="capture">
+    <button class="lens" id="lens" type="button" aria-label="Choose leaf photos to analyse">
+      <div class="well" id="well"><div class="prompt" id="prompt"><strong>Drop leaf photos here</strong><span>or tap to choose JPEG or PNG</span></div></div>
+    </button>
+    <input id="file" type="file" accept="image/jpeg,image/png" multiple hidden>
+    <div class="strip" id="strip" role="group" aria-label="Photos in this batch"></div>
+    <div class="actions">
+      <button class="btn primary" id="go" type="button" disabled>Analyse</button>
+      <button class="btn" id="clear" type="button" hidden>Start over</button>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </div>
+
+  <div class="reading" id="reading"></div>
+
+  <section class="log" id="log">
+    <header><h3>Field log</h3><button class="link" id="wipe" type="button" hidden>Clear log</button></header>
+    <div class="entries" id="entries"></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+/* Served by FastAPI at /ui → same origin. Opened any other way → http://localhost:8000. Override with ?api=URL */
+const API = new URLSearchParams(location.search).get("api") || (location.pathname.startsWith("/ui") ? "" : "http://localhost:8000");
+const MAX_MB = 15;
+const SEV = ["healthy","mild","moderate","severe","critical"];
+const SEV_NOTE = {
+  healthy:"Nothing to treat. Keep scouting weekly.",
+  mild:"Early stage. Acting now keeps it small.",
+  moderate:"Spreading. Treat this week and keep affected plants apart.",
+  severe:"Heavy damage. Treat right away and protect neighbouring plants.",
+  critical:"The crop is at risk. Act today and ask an extension officer for help."
+};
+const URG = [["immediate","Do now"],["within_week","This week"],["seasonal","This season"]];
+
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k === "style") n.style.cssText = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(c));
+  return n;
+};
+const sevColor = s => `var(--s-${SEV.includes(s) ? s : "moderate"})`;
+const fmtDate = (d, long) => { const t = new Date(d); return isNaN(t) ? "" : t.toLocaleDateString(undefined, long ? { day: "numeric", month: "short", year: "numeric" } : { day: "numeric", month: "short" }); };
+
+const state = { items: [], selected: null, view: null, busy: false, history: [], historyError: null };
+let uid = 0;
+
+function setStatus(msg, err){ const s = $("status"); s.textContent = msg || ""; s.className = "status" + (err ? " err" : ""); }
+const unreachable = () => `Can’t reach the Netra server at ${API || location.origin}. Start it with ./run.sh and open http://localhost:8000.`;
+
+async function api(path, opts){
+  const r = await fetch(API + path, opts);
+  let body = null; try { body = await r.json(); } catch {}
+  if (!r.ok) throw new Error((body && (typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail))) || `Server returned ${r.status}`);
+  return body;
+}
+
+/* ---------- history (server side) ---------- */
+async function loadHistory(){
+  try { state.history = (await api("/analyses")).analyses; state.historyError = null; }
+  catch (e) { state.historyError = e instanceof TypeError ? unreachable() : e.message; }
+  renderLog();
+}
+
+/* ---------- files ---------- */
+function addFiles(list){
+  const bad = [];
+  for (const f of list) {
+    if (!["image/jpeg","image/png"].includes(f.type)) { bad.push(`${f.name} isn’t a JPEG or PNG`); continue; }
+    if (f.size > MAX_MB * 1048576) { bad.push(`${f.name} is over ${MAX_MB} MB`); continue; }
+    state.items.push({ id: ++uid, file: f, url: URL.createObjectURL(f), status: "pending", result: null, error: null });
+  }
+  setStatus(bad.length ? "Skipped: " + bad.join("; ") + "." : "", !!bad.length);
+  const first = state.items.find(i => i.status === "pending");
+  if (first && !state.items.some(i => i.id === state.selected)) selectItem(first.id); else render();
+}
+
+async function analyseAll(){
+  if (state.busy) return;
+  const todo = state.items.filter(i => i.status === "pending" || i.status === "error");
+  if (!todo.length) return;
+  state.busy = true; render();
+  let done = 0, failed = 0;
+  for (const it of todo) {
+    it.status = "scanning"; it.error = null;
+    setStatus(todo.length > 1 ? `Reading photo ${done + failed + 1} of ${todo.length}…` : "Reading the leaf…");
+    if (state.selected === it.id) selectItem(it.id); else render();
+    try {
+      const fd = new FormData(); fd.append("file", it.file);
+      const body = await api("/analyse/", { method: "POST", body: fd });
+      it.result = body.result; it.analysisId = body.id; it.status = "done"; done++;
+    } catch (e) {
+      it.status = "error"; it.error = e instanceof TypeError ? unreachable() : e.message; failed++;
+    }
+    if (state.selected === it.id) selectItem(it.id); else render();
+  }
+  state.busy = false;
+  setStatus(failed ? `${done} read, ${failed} couldn’t be read. Select a marked photo to see why.` : (done > 1 ? `${done} photos read.` : ""), !!failed);
+  render(); loadHistory();
+}
+
+function selectItem(id){
+  state.selected = id;
+  const it = state.items.find(i => i.id === id);
+  state.view = it ? { src: it.url, name: it.file.name, result: it.result, error: it.error, status: it.status, id: it.analysisId } : null;
+  render();
+}
+function selectEntry(a){
+  state.selected = null;
+  state.view = { src: API + a.image_url, name: a.filename, result: a.result, when: a.created_at, status: "done", id: a.id };
+  render(); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------- render ---------- */
+function render(){
+  const cur = state.items.find(i => i.id === state.selected);
+  const src = (state.view && state.view.src) || "";
+  const well = $("well"), prompt = $("prompt");
+  well.querySelectorAll("img").forEach(n => n.remove());
+  if (src) { well.prepend(el("img", { src, alt: "Selected leaf photo" })); prompt.hidden = true; } else prompt.hidden = false;
+  well.classList.toggle("scanning", !!cur && cur.status === "scanning");
+
+  const strip = $("strip"); strip.replaceChildren();
+  state.items.forEach((it, n) => strip.append(el("button", {
+    class: "chip", type: "button", "data-status": it.status, "aria-pressed": String(it.id === state.selected),
+    "aria-label": `Photo ${n + 1}: ${it.file.name}, ${it.status}`, onclick: () => selectItem(it.id)
+  }, el("img", { src: it.url, alt: "" }))));
+
+  const pending = state.items.filter(i => i.status === "pending" || i.status === "error").length;
+  const go = $("go");
+  go.disabled = state.busy || pending === 0;
+  go.textContent = state.busy ? "Reading…" : pending > 1 ? `Analyse ${pending} photos` : "Analyse";
+  $("clear").hidden = state.items.length === 0 || state.busy;
+  renderReading(); renderLog();
+}
+
+function renderReading(){
+  const root = $("reading"); root.replaceChildren();
+  const v = state.view;
+  if (v && v.status === "scanning") { root.append(el("div", { class: "intro" }, el("h2", {}, "Reading the leaf…"), el("p", {}, "This usually takes a few seconds."))); return; }
+  if (v && v.status === "error") {
+    root.append(el("div", { class: "intro" }, el("h2", {}, "That photo didn’t read."), el("p", { class: "status err", style: "text-align:left;max-width:48ch" }, v.error || "Unknown error"), el("p", {}, "Sort out the problem above, then choose Analyse again.")));
+    return;
+  }
+  if (!v || !v.result) {
+    root.append(el("div", { class: "intro" },
+      el("h2", {}, "Show Netra one leaf."),
+      el("p", {}, "Upload a photo of a crop leaf. You’ll get the likely disease, how serious it is, and what to do about it."),
+      el("ul", {}, el("li", {}, "Fill the circle with a single leaf."), el("li", {}, "Use daylight and skip the flash."), el("li", {}, "Show the spots, curling or discoloured edges."))));
+    return;
+  }
+  const r = v.result, sev = SEV.includes(r.severity) ? r.severity : "moderate", idx = SEV.indexOf(sev);
+  root.append(
+    el("h2", { class: "crop" }, r.crop_detected || "Unknown crop"),
+    el("p", { class: "sub" }, v.name + (v.when ? " · " + fmtDate(v.when, true) : "")),
+    r.mode === "offline" && el("p", { class: "offline" }, "Offline colour check. A rough estimate, not a diagnosis."),
+    r.overall_health && el("p", { class: "health" }, r.overall_health),
+    el("div", { class: "gauge", role: "img", "aria-label": `Severity: ${sev}` }, SEV.map((s, i) => el("div", { "data-on": i <= idx ? "1" : "0", style: `--c:${sevColor(sev)}` }))),
+    el("div", { class: "gauge-labels", "aria-hidden": "true" }, SEV.map((s, i) => el("span", { "aria-current": String(i === idx) }, s))),
+    el("p", { class: "sev-note" }, SEV_NOTE[sev]));
+
+  const ds = Array.isArray(r.diseases) ? r.diseases : [];
+  root.append(el("section", { class: "block" }, el("h3", {}, "What it looks like"),
+    ds.length ? el("div", { class: "dz" }, ds.map(d => {
+      const p = Math.round(Math.max(0, Math.min(1, Number(d.confidence) || 0)) * 100);
+      return el("article", {}, el("div", { class: "ring", style: `--p:${p}`, role: "img", "aria-label": `${p}% confidence` }, el("span", {}, p + "%")),
+        el("div", {}, el("h4", {}, d.name || "Unnamed"), el("p", {}, d.description || "")));
+    })) : el("p", { class: "none", style: "color:var(--muted)" }, "No disease detected in this photo.")));
+
+  const ts = Array.isArray(r.treatments) ? r.treatments : [];
+  if (ts.length) root.append(el("section", { class: "block" }, el("h3", {}, "What to do"),
+    el("div", { class: "tx" }, URG.map(([key, label]) => {
+      const g = ts.filter(t => (t.urgency || "seasonal") === key);
+      return el("div", { class: "col", "data-u": key }, el("h4", {}, label), g.length ? g.map(treatment) : el("p", { class: "none" }, "Nothing here."));
+    }))));
+  if (r.additional_notes) root.append(el("div", { class: "notes" }, r.additional_notes));
+  root.append(
+    el("p", { class: "caution" }, "This is an AI reading of a photo. Check with a local agriculture officer before applying any chemical."),
+    el("div", { class: "tools" },
+      el("button", { class: "btn", type: "button", onclick: () => window.print() }, "Print report"),
+      el("button", { class: "btn", type: "button", id: "copy", onclick: copySummary }, "Copy summary"),
+      v.id && el("button", { class: "btn", type: "button", onclick: removeCurrent }, "Delete from log")));
+}
+
+function steps(text){
+  let parts = String(text || "").split(/\n+/).map(s => s.replace(/^\s*(?:\d+[.)]|[-•*])\s*/, "").trim()).filter(Boolean);
+  if (parts.length < 2) parts = String(text || "").split(/\s*\b\d+[.)]\s+/).map(s => s.trim()).filter(Boolean);
+  return parts;
+}
+function treatment(t){
+  const st = steps(t.instructions);
+  return el("div", { class: "t" }, el("span", { class: "tag" }, t.treatment_type || "preventive"), el("h5", {}, t.treatment_name || "Treatment"),
+    st.length > 1 ? el("ol", {}, st.map(s => el("li", {}, s))) : el("p", {}, st[0] || ""));
+}
+
+function copySummary(){
+  const r = state.view && state.view.result; if (!r) return;
+  const lines = [`${r.crop_detected} – ${r.severity}`, r.overall_health, "",
+    ...(r.diseases || []).map(d => `• ${d.name} (${Math.round((d.confidence || 0) * 100)}%)`), "",
+    ...(r.treatments || []).map(t => `[${t.urgency}] ${t.treatment_name} (${t.treatment_type}): ${t.instructions}`)];
+  navigator.clipboard.writeText(lines.join("\n")).then(
+    () => { const b = $("copy"); if (b) b.textContent = "Copied"; },
+    () => setStatus("Couldn’t copy. Select the text and copy it by hand.", true));
+}
+
+async function removeCurrent(){
+  const id = state.view && state.view.id; if (!id) return;
+  try { await api("/analyses/" + id, { method: "DELETE" }); } catch (e) { setStatus(e.message, true); return; }
+  state.items.forEach(i => { if (i.analysisId === id) i.analysisId = null; });
+  state.view = null; state.selected = null; render(); loadHistory();
+}
+
+function renderLog(){
+  const box = $("entries"); box.replaceChildren();
+  $("wipe").hidden = state.history.length === 0;
+  if (state.historyError) { box.append(el("p", { class: "empty-log" }, state.historyError)); return; }
+  if (!state.history.length) { box.append(el("p", { class: "empty-log" }, "Photos you analyse are saved here.")); return; }
+  state.history.forEach(a => box.append(el("button", { class: "entry", type: "button", style: `--c:${sevColor(a.result && a.result.severity)}`, onclick: () => selectEntry(a) },
+    el("span", { class: "th" }, el("img", { src: API + a.image_url, alt: "", loading: "lazy" })),
+    el("b", {}, (a.result && a.result.crop_detected) || "Unknown"),
+    el("small", {}, ((a.result && a.result.severity) || "") + " · " + fmtDate(a.created_at)))));
+}
+
+/* ---------- wiring ---------- */
+const lens = $("lens"), input = $("file");
+lens.addEventListener("click", () => input.click());
+input.addEventListener("change", () => { addFiles([...input.files]); input.value = ""; });
+["dragenter","dragover"].forEach(t => lens.addEventListener(t, e => { e.preventDefault(); lens.dataset.drag = "1"; }));
+["dragleave","drop"].forEach(t => lens.addEventListener(t, e => { e.preventDefault(); lens.dataset.drag = "0"; }));
+lens.addEventListener("drop", e => addFiles([...e.dataTransfer.files]));
+$("go").addEventListener("click", analyseAll);
+$("clear").addEventListener("click", () => { state.items.forEach(i => URL.revokeObjectURL(i.url)); state.items = []; state.selected = null; state.view = null; setStatus(""); render(); });
+$("wipe").addEventListener("click", async () => {
+  if (!confirm("Delete every saved analysis and its photo?")) return;
+  try { await api("/analyses", { method: "DELETE" }); } catch (e) { setStatus(e.message, true); return; }
+  loadHistory();
+});
+$("jumpLog").addEventListener("click", () => $("log").scrollIntoView({ behavior: "smooth" }));
+render(); loadHistory();
+</script>
+</body>
+</html>
