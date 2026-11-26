@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yatra Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="layout">
+    <form id="plan-form" class="ticket" autocomplete="off">
+      <header>
+        <h1>Yatra</h1>
+        <p>Plan the trip: weather, places and money in one go.</p>
+      </header>
+
+      <label>Destination
+        <input id="destination" name="destination" required placeholder="e.g. Goa" list="dest-list">
+        <datalist id="dest-list"></datalist>
+      </label>
+      <div id="quick" class="quick" aria-label="Destinations with curated places"></div>
+
+      <div class="row">
+        <label>From <input id="start" type="date" required></label>
+        <label>To <input id="end" type="date" required></label>
+      </div>
+
+      <label>Currency you spend in
+        <input id="currency" value="INR" maxlength="3" required pattern="[A-Za-z]{3}">
+      </label>
+
+      <button id="go" type="submit">Plan my trip</button>
+      <p id="form-error" class="error" role="alert" hidden></p>
+    </form>
+
+    <section class="results" aria-live="polite">
+      <ol id="route" class="route" hidden>
+        <li data-step="weather"><span></span>Weather</li>
+        <li data-step="options"><span></span>Places</li>
+        <li data-step="currency"><span></span>Currency</li>
+      </ol>
+
+      <div id="empty" class="empty">
+        <h2>Where to?</h2>
+        <p>Pick a destination and dates. Results appear here as each source responds.</p>
+      </div>
+
+      <article id="weather" class="panel" hidden><h2>Weather</h2><div class="body"></div></article>
+      <article id="places" class="panel" hidden><h2>Places to visit</h2><div class="body"></div></article>
+      <article id="currency-panel" class="panel" hidden><h2>Currency</h2><div class="body"></div></article>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
